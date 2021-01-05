@@ -35,7 +35,7 @@ class Cinema():
     def create_seats(self):
         for row in range(1,self.rows+1):
             for column in range(1,self.columns+1):
-                seatNo=row*10+column
+                seatNo=str(row)+'-'+str(column)
                 price=self.calculate_price(row,column)
                 Seat(seatNo,'S',price)
         
@@ -59,7 +59,7 @@ class Cinema():
     def book_seat(self,row,column,user):
         conn=mysql.connector.connect(user=User,password=Password,host=Host,database=Database)
         crsr=conn.cursor()
-        seatNo=row*10+column     
+        seatNo=str(row)+'-'+str(column)     
         crsr.execute("INSERT INTO Users(seatNo,name,gender,phoneNo,age) VALUES (%s,%s,%s,%s,%s)",(seatNo,user.name,
                    user.gender,user.phoneNo,user.age))
         crsr.execute("UPDATE Seats SET status='B' WHERE seatNo=%s",(seatNo,))
@@ -70,7 +70,7 @@ class Cinema():
             
     
     def statistics(self):
-        stats=['No of purchased tickets','Percentage of tickeds booked','Current Income','Total Income']
+        stats=['No of purchased tickets','Percentage of tickets booked','Current Income','Total Income']
         
         conn=mysql.connector.connect(user=User,password=Password,host=Host,database=Database)
         crsr=conn.cursor()
@@ -80,14 +80,18 @@ class Cinema():
         result+=crsr.fetchall()
         crsr.close()
         conn.close()
-        print(stats[0]+' : '+str(result[0][0]))
-        print(stats[1]+' : '+str(round(((result[0][1]/result[1][1])*100),2))+'%')
-        print(stats[2]+' : $'+str(result[0][1]))
-        print(stats[3]+' : $'+str(result[1][1]))
-    
+        if result[0][0]:
+            print(stats[0]+' : '+str(result[0][0]))
+            print(stats[1]+' : '+str(round(((result[0][1]/result[1][1])*100),2))+'%')
+            print(stats[2]+' : $'+str(result[0][1]))
+            print(stats[3]+' : $'+str(result[1][1]))
+        else:
+            print('No seats have been booked yet.')
+
+
     def user_info(self,row,column):
         info=["Name","Gender","Age","Ticket Price in $","Phone No"]
-        seatNo=row*10+column
+        seatNo=str(row)+'-'+str(column)
         conn=mysql.connector.connect(user=User,password=Password,host=Host,database=Database)
         crsr=conn.cursor()
         crsr.execute("SELECT U.name,U.gender,U.age,C.price,U.phoneNo FROM Users U INNER JOIN Seats C ON U.seatNo=C.seatNo WHERE C.seatNo=%s",(seatNo,))
@@ -99,7 +103,7 @@ class Cinema():
             print(inf+' : '+str(result[0][i]))
     
     def check_status(self,row,column):
-        seatNo=row*10+column
+        seatNo=str(row)+'-'+str(column)
         conn=mysql.connector.connect(user=User,password=Password,host=Host,database=Database)
         crsr=conn.cursor()
         crsr.execute("SELECT status from  Seats  WHERE seatNo=%s",(seatNo,))
